@@ -1,0 +1,28 @@
+.stats {
+  height: 800px;
+  width: 200px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: space-between;
+}
+.stats-container {
+  border: 1px solid #fff;
+  border-radius: 5px;
+  height: 200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  position: relative;
+}
+
+.stats-container p {
+  position: absolute;
+  top: 0;
+  font-size: 20px;
+  color: #fff;
+}
+.stats-container span {
+  font-size: 20px;
+  color: #fff;
+}

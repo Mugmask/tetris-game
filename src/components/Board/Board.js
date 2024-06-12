@@ -10,6 +10,7 @@ export function Board({ rows, columns, gameStatus }) {
   const positionRef = useRef(position);
   const randomShapeRef = useRef(randomShape);
   const boardRef = useRef(board);
+  const requestId = useRef();
 
   /*   TODO:
  - Mover piezas con el teclado
@@ -34,17 +35,17 @@ export function Board({ rows, columns, gameStatus }) {
     setBoard(newBoard);
   };
   const cleanPreviousPosition = (currentShape, newBoard) => {
-    let shape = currentShape !== randomShapeRef.current ? randomShapeRef.current : currentShape;
+    let shape = currentShape === randomShapeRef.current ? currentShape : randomShapeRef.current;
 
     shape.shape.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell) {
           // Si la celda en el tablero original está ocupada, limpiarla
-          if (
-            boardRef.current[rowIndex + positionRef.current.y] &&
-            boardRef.current[rowIndex + positionRef.current.y][colIndex + positionRef.current.x]
-          ) {
-            newBoard[rowIndex + positionRef.current.y][colIndex + positionRef.current.x] = 0;
+          const rowToClean = rowIndex + positionRef.current.y;
+          const colToClean = colIndex + positionRef.current.x;
+
+          if (rowToClean >= 0 && rowToClean < newBoard.length && colToClean >= 0 && colToClean < newBoard[0].length) {
+            newBoard[rowToClean][colToClean] = 0;
           }
         }
       });
@@ -130,9 +131,19 @@ export function Board({ rows, columns, gameStatus }) {
         rotatedShape[col][currentShape.length - 1 - row] = currentShape[row][col];
       }
     }
-    boardRef.current = cleanPreviousPosition(currentShape, createBoard());
-    setBoard(cleanPreviousPosition(currentShape, createBoard()));
+    let cleanBoard = cleanPreviousPosition(currentShape, createBoard());
+
+    rotatedShape.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (cell) {
+          cleanBoard[positionRef.current.y + rowIndex][positionRef.current.x + colIndex] = cell;
+        }
+      });
+    });
+
+    boardRef.current = cleanBoard;
     randomShapeRef.current.shape = rotatedShape;
+    setBoard(cleanBoard);
     setRandomShape(randomShapeRef.current);
   };
 
@@ -167,13 +178,45 @@ export function Board({ rows, columns, gameStatus }) {
     };
   }, []);
 
+  //Animacion controlada por fallspeed
   useEffect(() => {
-    const interval = setInterval(() => {
-      moveShape({ ...positionRef.current, y: positionRef.current.y + 1 });
-    }, 1000);
+    let lastUpdateTime = performance.now();
+    let delta = 0;
+    const fallSpeed = 1000; // Velocidad de caída en milisegundos
 
-    return () => clearInterval(interval);
+    const animate = () => {
+      const currentTime = performance.now();
+      delta += currentTime - lastUpdateTime;
+
+      if (delta > fallSpeed) {
+        moveShape({ ...positionRef.current, y: positionRef.current.y + 1 });
+        delta = 0;
+      }
+
+      lastUpdateTime = currentTime;
+      requestId.current = requestAnimationFrame(animate);
+    };
+
+    requestId.current = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(requestId.current);
+    };
   }, []);
+
+  /*   useEffect(() => {
+    const animate = () => {
+      
+      moveShape({ ...positionRef.current, y: positionRef.current.y + 1 });
+      requestId.current = requestAnimationFrame(animate);
+    };
+
+    requestId.current = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(requestId.current);
+    };
+  }, []); */
 
   useEffect(() => {
     boardRef.current = board;

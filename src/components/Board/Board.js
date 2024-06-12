@@ -127,7 +127,6 @@ export function Board({ rows, columns, gameStatus }) {
 
     for (let row = 0; row < currentShape.length; row++) {
       for (let col = 0; col < currentShape[row].length; col++) {
-        // Transponer la matriz y luego invertir las filas
         rotatedShape[col][currentShape.length - 1 - row] = currentShape[row][col];
       }
     }

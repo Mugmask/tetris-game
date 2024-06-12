@@ -24,11 +24,11 @@ export function Board({ rows, columns, gameStatus }) {
     return newBoard;
   };
   const draw = (currentShape, startY, startX) => {
-    let newBoard = boardRef.current.map((row) => row.map((x) => x));
+    let newBoard = createBoard();
     currentShape.shape.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell) {
-          newBoard[startY + rowIndex][startX + colIndex] = cell;
+          newBoard[startY + rowIndex][startX + colIndex] = { type: "piece", className: currentShape.className };
         }
       });
     });
@@ -81,7 +81,10 @@ export function Board({ rows, columns, gameStatus }) {
     currentShape.shape.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell) {
-          newBoard[rowIndex + newPosition.y][colIndex + newPosition.x] = cell;
+          newBoard[rowIndex + newPosition.y][colIndex + newPosition.x] = {
+            type: "piece",
+            className: currentShape.className,
+          };
         }
       });
     });
@@ -236,8 +239,8 @@ export function Board({ rows, columns, gameStatus }) {
         return (
           <ul key={`${indexRow}`}>
             {row.map((column, indexCol) => {
-              return column === 1 ? (
-                <li key={`${indexRow}-${indexCol}`} className={`piece sparkle ${randomShape?.className}`}></li>
+              return column !== 0 ? (
+                <li key={`${indexRow}-${indexCol}`} className={`piece sparkle ${column?.className}`}></li>
               ) : (
                 <li key={`${indexRow}-${indexCol}`}></li>
               );

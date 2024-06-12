@@ -34,8 +34,9 @@ export function Board({ rows, columns, gameStatus }) {
     setBoard(newBoard);
   };
   const cleanPreviousPosition = (currentShape, newBoard) => {
-    // Limpiar la posición de la pieza anterior
-    currentShape.shape.forEach((row, rowIndex) => {
+    let shape = currentShape !== randomShapeRef.current ? randomShapeRef.current : currentShape;
+
+    shape.shape.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell) {
           // Si la celda en el tablero original está ocupada, limpiarla
@@ -63,8 +64,8 @@ export function Board({ rows, columns, gameStatus }) {
     if (collisionResult.type !== "none") {
       if (collisionResult.type === "wall") {
         return;
-      } else if (collisionResult.type == "block" && positionRef.current.y == 0) {
-        if (boardRef.current[0].find((x) => x == 1)) gameStatus("gameOver");
+      } else if (collisionResult.type == "floor" && positionRef.current.y == 0) {
+        gameStatus("gameOver");
         return;
       } else {
         setBoard(newBoard);
@@ -96,16 +97,44 @@ export function Board({ rows, columns, gameStatus }) {
         if (currentShape[rowIndex][colIndex]) {
           const newRow = move.y + rowIndex;
           const newCol = move.x + colIndex;
+
           if (newCol >= columns || newCol < 0) {
             return { type: "wall", position: { x: newCol, y: newRow } };
           }
-          if (newRow >= rows || newBoard[newRow][newCol]) {
-            return { type: "block", position: { x: newCol, y: newRow } };
+
+          if (newRow >= rows) {
+            return { type: "floor", position: { x: newCol, y: newRow } };
+          }
+
+          if (newBoard[newRow]?.[newCol]) {
+            if (move.x !== positionRef.current.x) {
+              return { type: "wall", position: { x: newCol, y: newRow } };
+            }
+            if (move.y !== positionRef.current.y) {
+              return { type: "floor", position: { x: newCol, y: newRow } };
+            }
           }
         }
       }
     }
     return { type: "none" };
+  };
+  const rotateShape = () => {
+    if (!randomShapeRef.current) return;
+    let currentShape = randomShapeRef.current?.shape;
+
+    let rotatedShape = Array.from({ length: currentShape[0].length }, () => Array(currentShape.length).fill(0));
+
+    for (let row = 0; row < currentShape.length; row++) {
+      for (let col = 0; col < currentShape[row].length; col++) {
+        // Transponer la matriz y luego invertir las filas
+        rotatedShape[col][currentShape.length - 1 - row] = currentShape[row][col];
+      }
+    }
+    boardRef.current = cleanPreviousPosition(currentShape, createBoard());
+    setBoard(cleanPreviousPosition(currentShape, createBoard()));
+    randomShapeRef.current.shape = rotatedShape;
+    setRandomShape(randomShapeRef.current);
   };
 
   useEffect(() => {
@@ -120,7 +149,7 @@ export function Board({ rows, columns, gameStatus }) {
         newPos.y += 1;
       }
       if (event.key === "ArrowUp") {
-        // Maneja la lógica de ArrowUp
+        rotateShape();
       }
       if (event.key === "ArrowLeft") {
         newPos.x -= 1;
@@ -150,6 +179,7 @@ export function Board({ rows, columns, gameStatus }) {
   useEffect(() => {
     boardRef.current = board;
   }, [board]);
+
   useEffect(() => {
     positionRef.current = position;
   }, [position]);
